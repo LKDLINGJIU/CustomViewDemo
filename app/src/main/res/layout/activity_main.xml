@@ -8,6 +8,7 @@
     tools:context=".MainActivity">
 
     <LinearLayout
+        android:id="@+id/thumbLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
@@ -15,6 +16,7 @@
         android:orientation="horizontal">
 
         <com.android.yucheng.customviewdemo.ThumbsLikeView
+            android:id="@+id/thumbView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="#ff0" />

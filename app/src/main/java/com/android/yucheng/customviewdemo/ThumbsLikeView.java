@@ -6,13 +6,16 @@ import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
+import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
+import android.view.animation.BounceInterpolator;
 
 /**
  * Created by lingjiu on 2018/12/21.
@@ -40,6 +43,7 @@ public class ThumbsLikeView extends View implements ValueAnimator.AnimatorUpdate
     private int squareSide;
     private float thumbsOffsetY;
     private float shinOffsetY;
+    private Path path;
 
 
     public ThumbsLikeView(Context context) {
@@ -68,11 +72,12 @@ public class ThumbsLikeView extends View implements ValueAnimator.AnimatorUpdate
         outAnim.play(likeOutAnim).before(unLikeOutAnim);
         ObjectAnimator unLikeInAnim = ObjectAnimator.ofFloat(this, "unLikeInProgress", 0, 1);
         ObjectAnimator likeInAnim = ObjectAnimator.ofFloat(this, "likeInProgress", 0, 1);
+        likeInAnim.setInterpolator(new BounceInterpolator());
         ObjectAnimator shinInAnim = ObjectAnimator.ofFloat(this, "shinInProgress", 0, 1);
-        likeInAnim.addUpdateListener(this);
+        unLikeInAnim.addUpdateListener(this);
         shinInAnim.addUpdateListener(this);
         inAnim = new AnimatorSet();
-        inAnim.play(likeInAnim).with(shinInAnim).before(unLikeInAnim);
+        inAnim.play(likeInAnim).with(shinInAnim).after(unLikeInAnim);
 
         //留一个内边距做动画
         padding = (int) DimensionUtils.dpToPx(6, getContext());
@@ -84,26 +89,38 @@ public class ThumbsLikeView extends View implements ValueAnimator.AnimatorUpdate
         shinBounds = new Rect(padding, padding, likeShiningDrawable.getIntrinsicWidth() - padding,
                 likeShiningDrawable.getIntrinsicHeight() - padding);
         point = new Point();
+        path = new Path();
     }
 
     public void setOutProgress(float progress) {
         outProgress = progress;
+        Log.i("tag", " outProgress= " + outProgress);
     }
 
     public void setUnLikeOutProgress(float progress) {
         unLikeOutProgress = progress;
+        Log.i("tag", " unLikeOutProgress= " + unLikeOutProgress);
     }
 
     public void setUnLikeInProgress(float progress) {
         unLikeInProgress = progress;
+        Log.i("tag", " unLikeInProgress= " + unLikeInProgress);
     }
 
     public void setLikeInProgress(float progress) {
         likeInProgress = progress;
+        Log.i("tag", " likeInProgress= " + likeInProgress);
     }
 
     public void setShinInProgress(float progress) {
         shinInProgress = progress;
+        Log.i("tag", " shinInProgress= " + shinInProgress);
+    }
+
+    @Override
+    public void setSelected(boolean selected) {
+        super.setSelected(selected);
+        like(isSelected(),true);
     }
 
     /**
@@ -111,8 +128,25 @@ public class ThumbsLikeView extends View implements ValueAnimator.AnimatorUpdate
      *
      * @param isLike
      */
-    public void like(boolean isLike) {
+    public void like(boolean isLike, boolean needAnim) {
         this.isLike = isLike;
+        if (isLike) {
+            if (needAnim) {
+                inAnim.start();
+            } else {
+                outProgress = 1;
+                invalidate();
+            }
+        } else {
+            if (needAnim) {
+                outAnim.start();
+            } else {
+                unLikeInProgress = 1;
+                likeInProgress=1;
+                shinInProgress=1;
+                invalidate();
+            }
+        }
     }
 
     @Override
@@ -139,33 +173,76 @@ public class ThumbsLikeView extends View implements ValueAnimator.AnimatorUpdate
         squareSide = (int) (Math.min(mWidth, mHeight) * 0.8);
         thumbsOffsetY = squareSide * 0.3f;
         shinOffsetY = squareSide * 0.2f;
+        path.moveTo(point.x, point.y);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
-        if (isLike) {
-
-
-            return;
-        }
-
         int left = point.x - squareSide / 2;
         int top = (int) (point.y - squareSide / 2 + thumbsOffsetY);
         int right = point.x + squareSide / 2;
         int bottom = (int) (point.y + squareSide / 2 + thumbsOffsetY);
-        likeBounds.set(left , top, right, bottom);
-        likeSelectedDrawable.setBounds(likeBounds);
-        likeUnSelectedDrawable.setBounds(likeBounds);
-        likeSelectedDrawable.draw(canvas);
-        likeUnSelectedDrawable.draw(canvas);
-        //闪光靠上画
-        left = point.x - squareSide / 2;
-        top = (int) (point.y - squareSide / 2 - shinOffsetY);
-        right = point.x + squareSide / 2;
-        bottom = (int) (point.y + squareSide / 2 - shinOffsetY);
-        shinBounds.set(left, top, right, bottom);
-        likeShiningDrawable.setBounds(shinBounds);
-        likeShiningDrawable.draw(canvas);
+        if (isLike) {
+            likeDraw(canvas, left, top, right, bottom);
+        } else {
+            int unSelectedDrawableChangeSize = (int) (outProgress * squareSide * 0.1f);
+            likeBounds.set(left + unSelectedDrawableChangeSize, top + unSelectedDrawableChangeSize,
+                    right - unSelectedDrawableChangeSize, bottom - unSelectedDrawableChangeSize);
+            if (outProgress < 1) {
+                //闪光延时退出
+                if (outProgress < 0.4) {
+                    top = (int) (point.y - squareSide / 2 - shinOffsetY);
+                    bottom = (int) (point.y + squareSide / 2 - shinOffsetY);
+                    shinBounds.set(left, top, right, bottom);
+                    likeShiningDrawable.setBounds(shinBounds);
+                    likeShiningDrawable.draw(canvas);
+                }
+                likeSelectedDrawable.setBounds(likeBounds);
+                likeSelectedDrawable.draw(canvas);
+            } else if (outProgress == 1) {
+                int selectedDrawableChangeSize = (int) (unLikeOutProgress * squareSide * 0.1f);
+                likeBounds.set(likeBounds.left - selectedDrawableChangeSize, likeBounds.top - selectedDrawableChangeSize,
+                        likeBounds.right + selectedDrawableChangeSize, likeBounds.bottom + selectedDrawableChangeSize);
+                likeUnSelectedDrawable.setBounds(likeBounds);
+                likeUnSelectedDrawable.draw(canvas);
+            }
+
+        }
+
+
+    }
+
+    private void likeDraw(Canvas canvas, int left, int top, int right, int bottom) {
+        //进入的动画
+        int unSelectedDrawableChangeSize = (int) (unLikeInProgress * squareSide * 0.1f);
+        likeBounds.set(left + unSelectedDrawableChangeSize, top + unSelectedDrawableChangeSize,
+                right - unSelectedDrawableChangeSize, bottom - unSelectedDrawableChangeSize);
+        if (unLikeInProgress < 1) {
+            Log.e("onDraw", "likeBounds = " + likeBounds.toString() + "unSelectedDrawableChangeSize =" + unSelectedDrawableChangeSize);
+            likeUnSelectedDrawable.setBounds(likeBounds);
+            likeUnSelectedDrawable.draw(canvas);
+        } else if (unLikeInProgress == 1) {
+            int selectedDrawableChangeSize = (int) (likeInProgress * squareSide * 0.1f);
+            likeBounds.set(likeBounds.left - selectedDrawableChangeSize, likeBounds.top - selectedDrawableChangeSize,
+                    likeBounds.right + selectedDrawableChangeSize, likeBounds.bottom + selectedDrawableChangeSize);
+            //Log.e("onDraw","likeBounds2 = "+likeBounds.toString());
+            likeSelectedDrawable.setBounds(likeBounds);
+            likeSelectedDrawable.draw(canvas);
+            //闪光靠上画
+            left = point.x - squareSide / 2;
+            top = (int) (point.y - squareSide / 2 - shinOffsetY);
+            right = point.x + squareSide / 2;
+            bottom = (int) (point.y + squareSide / 2 - shinOffsetY);
+            shinBounds.set(left, top, right, bottom);
+            //path.moveTo(point.x,(bottom+top)/2);
+            path.reset();
+            path.addCircle(point.x, (bottom + top) / 2, (float) (shinInProgress * squareSide), Path.Direction.CW);
+            canvas.save();
+            canvas.clipPath(path);
+            likeShiningDrawable.setBounds(shinBounds);
+            likeShiningDrawable.draw(canvas);
+            canvas.restore();
+        }
     }
 
     /**

@@ -26,8 +26,10 @@ public class TextNumberView extends View implements ValueAnimator.AnimatorUpdate
     private String[] mPreNumberChar = new String[3];
     private float mWidth, mHeight;
     //总数
-    private int mSumNumber;
+    private int mSumNumber = 100;
     private ObjectAnimator mAnim;
+    //动画方向(数字变大->上,数字变小->下)
+    private boolean animToUp = false;
     private float progress;
 
     public TextNumberView(Context context) {
@@ -59,14 +61,19 @@ public class TextNumberView extends View implements ValueAnimator.AnimatorUpdate
         mAnim.addUpdateListener(this);
     }
 
+    @Override
+    public void setSelected(boolean selected) {
+        super.setSelected(selected);
+        like(isSelected(), true);
+    }
+
     public void setProgress(float progress) {
         this.progress = progress;
-        invalidate();
     }
 
     @Override
     public void onAnimationUpdate(ValueAnimator animation) {
-
+        invalidate();
     }
 
     public void changeNumber(int number, boolean needAnim) {
@@ -77,6 +84,7 @@ public class TextNumberView extends View implements ValueAnimator.AnimatorUpdate
             mNumberChar[i] = String.valueOf((int) (number / Math.pow(10, i) % 10));
             Log.e("TextNumberView", "mNumberChar = " + mNumberChar[i]);
         }
+        animToUp = number > mSumNumber;
         mSumNumber = number;
         requestLayout();
         //invalidate();
@@ -88,8 +96,9 @@ public class TextNumberView extends View implements ValueAnimator.AnimatorUpdate
     }
 
 
-    public void like(boolean isLike) {
-        changeNumber(mSumNumber + 1, true);
+    public void like(boolean isLike, boolean needAnim) {
+       int number= isLike ? mSumNumber+1 : mSumNumber-1;
+        changeNumber(number, true);
     }
 
     @Override
@@ -126,10 +135,21 @@ public class TextNumberView extends View implements ValueAnimator.AnimatorUpdate
                 continue;
             String preChar = i < mPreNumberChar.length ? mPreNumberChar[i] : "";
             if (!TextUtils.isEmpty(preChar) && !TextUtils.equals(preChar, nowChar)) {
+                //透明度0-255(0透明----255不透明)
                 mAnimPaint.setAlpha((int) ((1 - progress) * 255));
-                canvas.drawText(preChar, mWidth - singleCharWidth * i, (mHeight / 2 - heightOffset) * (1 - progress), mAnimPaint);
+                float y = mHeight / 2 - heightOffset;
+                float preY;
+                float nowY;
+                if (animToUp) {
+                    preY = y * (1 - progress);
+                    nowY = mHeight - (mHeight / 2 + heightOffset) * (progress);
+                } else {
+                    preY = y + y *  progress;
+                    nowY = 0 + y * (progress);
+                }
+                canvas.drawText(preChar, mWidth - singleCharWidth * i, preY, mAnimPaint);
                 mAnimPaint.setAlpha((int) (progress * 255));
-                canvas.drawText(nowChar, mWidth - singleCharWidth * i, mHeight - (mHeight / 2 + heightOffset) * (progress), mAnimPaint);
+                canvas.drawText(nowChar, mWidth - singleCharWidth * i, nowY, mAnimPaint);
                 continue;
             }
             canvas.drawText(nowChar, mWidth - singleCharWidth * i, mHeight / 2 - heightOffset, mPaint);
