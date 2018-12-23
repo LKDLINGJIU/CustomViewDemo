@@ -35,13 +35,18 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="100dp"
         android:onClick="changeLike"
-        android:text="点赞" />
+        android:text="取消" />
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="100dp"
         android:onClick="LikeJia"
-        android:text="点赞+1" />
+        android:text="点赞/取消点赞" />
+
+    <com.android.yucheng.customviewdemo.view.RuleView
+        android:layout_width="match_parent"
+        android:background="@color/colorAccent"
+        android:layout_height="wrap_content"/>
 
 </LinearLayout>
