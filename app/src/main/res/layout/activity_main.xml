@@ -49,6 +49,12 @@
                 android:layout_marginTop="100dp"
                 android:onClick="LikeJia"
                 android:text="点赞+1" />
+
+            <com.android.yucheng.customviewdemo.view.RuleView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/colorAccent" />
+
         </LinearLayout>
 
         <View

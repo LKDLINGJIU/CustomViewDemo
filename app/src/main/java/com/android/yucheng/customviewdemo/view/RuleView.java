@@ -8,8 +8,11 @@ import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewConfiguration;
+import android.view.animation.BounceInterpolator;
+import android.widget.Scroller;
 
 import com.android.yucheng.customviewdemo.DimensionUtils;
 
@@ -18,7 +21,7 @@ import com.android.yucheng.customviewdemo.DimensionUtils;
  * Created by lingjiu on 2018/12/23.
  */
 public class RuleView extends View {
-
+    private final String TAG = getClass().getSimpleName();
     private Paint mPaint;
     private Paint mTextPaint;
     private int mWidth, mHeight;
@@ -36,6 +39,15 @@ public class RuleView extends View {
     //三条线宽度
     private float strokeWidth, shortScaleWidth, longScaleWidth;
     private int scaledTouchSlop;
+    private Scroller mScroller;
+    private VelocityTracker velocityTracker;
+    //可以滚动的最大距离
+    private float mScrollMaxDistance;
+    //直尺颜色
+    private int scaleColor = Color.parseColor("#999999");
+    //中心标准线颜色
+    private int standerColor = Color.parseColor("#49BA72");
+    private Scroller mBounceScroller;
 
     public RuleView(Context context) {
         this(context, null);
@@ -64,6 +76,8 @@ public class RuleView extends View {
         unitWidth = DimensionUtils.dpToPx(10, context);
         defaultHeight = (int) DimensionUtils.dpToPx(60, context);
         scaledTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
+        mScroller = new Scroller(context);
+        mBounceScroller = new Scroller(context, new BounceInterpolator());
     }
 
     @Override
@@ -83,24 +97,87 @@ public class RuleView extends View {
         shortHeight = mHeight / 4;
         longHeight = mHeight / 2;
         mTextPaint.setTextSize(mHeight / 2 - DimensionUtils.dpToPx(4, getContext()));
+
+        mScrollMaxDistance = unitWidth * 10 * (maxValue - minValue) / 2;
     }
 
     float downX;
-
+    //是否是滑动
+    boolean isTouchSlop;
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        createVelocityTracker(event);
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
             downX = event.getX();
             return true;
         } else if (event.getAction() == MotionEvent.ACTION_MOVE) {
             float offsetX = event.getX() - downX;
             //offsetX大于这个临界值可视为再滚动
-            if (offsetX>scaledTouchSlop) {
-                scrollBy(-(int) offsetX,0);
+            if (Math.abs(offsetX) > scaledTouchSlop || isTouchSlop) {
+                isTouchSlop = true;
+                //Log.i(TAG, "offsetx= " + offsetX + " getScrollX()" + getScrollX() + "   mScrollMaxDistance=" + mScrollMaxDistance);
+                if (Math.abs(getScrollX() - offsetX) < mScrollMaxDistance) {
+                    scrollBy(-(int) offsetX, 0);
+                }
+                downX = event.getX();
             }
+        } else if (event.getAction() == MotionEvent.ACTION_UP) {
+            if (isTouchSlop) {
+                velocityTracker.computeCurrentVelocity(1000);
+                float xVelocity = velocityTracker.getXVelocity();
+                float scrollX = xVelocity * 0.4f;
+                Log.i(TAG, "scrollX= " + scrollX + "   mScrollMaxDistance=" + mScrollMaxDistance + "   getScrollX()=" + getScrollX());
+                Scroller scroller = mScroller;
+                if (Math.abs(-scrollX + getScrollX()) > mScrollMaxDistance) {
+                    if (xVelocity > 0) {
+                        scrollX = (mScrollMaxDistance - Math.abs(getScrollX()));
+                    } else {
+                        scrollX = -(mScrollMaxDistance - Math.abs(getScrollX()));
+                    }
+                    scroller = mBounceScroller;
+                }
+                Log.i(TAG, "2222scrollX= " + scrollX + "   mScrollMaxDistance=" + mScrollMaxDistance);
+                scroller.startScroll(getScrollX(), 0, (int) (-scrollX), 0);
+                postInvalidate();
+                isTouchSlop = false;
+                recycleVelocity();
+            }
+
         }
         return super.onTouchEvent(event);
+    }
+
+    private VelocityTracker createVelocityTracker(MotionEvent event) {
+        if (velocityTracker == null) {
+            velocityTracker = VelocityTracker.obtain();
+        }
+        velocityTracker.addMovement(event);
+        return velocityTracker;
+    }
+
+    private void recycleVelocity() {
+        velocityTracker.recycle();
+        velocityTracker = null;
+    }
+
+    @Override
+    public void computeScroll() {
+        if (mScroller.computeScrollOffset()) {
+            Log.i(TAG, "mScroller.getCurrX() = " + mScroller.getCurrX());
+            scrollTo(mScroller.getCurrX(), 0);
+            postInvalidate();
+        } else if (!isTouchSlop) {
+            adjustPosition(getScrollX());
+        }
+    }
+
+    private void adjustPosition(float offset) {
+        //Log.i(TAG, "offset = " + offset + "  unitWidth=  " + unitWidth + "     " + Math.ceil(offset % unitWidth));
+        if (offset % unitWidth == 0) return;
+        float adjustOffset = (float) Math.ceil(offset % unitWidth);
+        mScroller.startScroll(getScrollX(), 0, -(int) adjustOffset, 0);
+        postInvalidate();
     }
 
     @Override
@@ -116,13 +193,14 @@ public class RuleView extends View {
         String drawText;
         //开始绘制x的位置
         float positionX = mWidth / 2 - unitWidth * 10 * (maxValue - minValue) / 2;
-        for (int i = 0; curValue <= maxValue; i++) {
+        for (int i = 0; curValue < maxValue; i++) {
             curValue = minValue + 0.1f * i;
             //刻度高度
             float scaleHeight;
             //Log.i("yc","curValue = "+curValue+"  curValue % 10 ="+(curValue % 10 == 0) );
-            Log.i("yc", "curValue = " + curValue + "  positionX = " + positionX + " unitWidth * i = " + unitWidth * i + "  positionX + unitWidth * i=" +
-                    (positionX + unitWidth * i));
+           /* Log.i("yc", "curValue = " + curValue + "  positionX = " + positionX + " unitWidth * i = " + unitWidth * i + "  positionX + unitWidth * i=" +
+                    (positionX + unitWidth * i));*/
+            mPaint.setColor(scaleColor);
             if (curValue * 10 % 10 == 0) {
 
                 mPaint.setStrokeWidth(longScaleWidth);
@@ -136,5 +214,12 @@ public class RuleView extends View {
             canvas.drawLine(positionX + unitWidth * i, 0,
                     positionX + unitWidth * i, scaleHeight, mPaint);
         }
+
+        int scrollX = getScrollX();
+        //划中心标准线
+        mPaint.setColor(standerColor);
+        mPaint.setStrokeWidth(longScaleWidth);
+        canvas.drawLine(mWidth / 2 + scrollX, 0,
+                mWidth / 2 + scrollX, longHeight + 6, mPaint);
     }
 }

@@ -26,6 +26,7 @@ import android.widget.Scroller;
  * 3mVelocityTracker.computeCurrentVelocity(1000);计算速率
  * mVelocityTracker.getXVelocity()x方向上的速率
  * 4mVelocityTracker.recycle()回收资源
+ * ViewDragHelper也可以实现
  * 补充:视差效果
  */
 public class SlideMenuView extends ViewGroup {
@@ -60,6 +61,7 @@ public class SlideMenuView extends ViewGroup {
     private void init(Context context) {
         scaledEdgeSlop = ViewConfiguration.get(context).getScaledEdgeSlop();
         scroller = new Scroller(context);
+
     }
 
     @Override
