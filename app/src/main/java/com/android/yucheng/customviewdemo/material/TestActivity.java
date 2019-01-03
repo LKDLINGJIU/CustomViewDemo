@@ -14,9 +14,14 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
 
+import com.android.yucheng.customviewdemo.DimensionUtils;
 import com.android.yucheng.customviewdemo.R;
 import com.android.yucheng.customviewdemo.fragment.CustomFragment;
+import com.ashokvarma.bottomnavigation.BadgeItem;
+import com.ashokvarma.bottomnavigation.BottomNavigationBar;
+import com.ashokvarma.bottomnavigation.BottomNavigationItem;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +37,8 @@ public class TestActivity extends AppCompatActivity {
     private ViewPager viewPager;
     private List<String> mTabs = new ArrayList<>();
     private List<Fragment> mFragments = new ArrayList<>();
+    private BottomNavigationBar mBottomNavigationBar;
+    private View toolbar;
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
@@ -40,12 +47,13 @@ public class TestActivity extends AppCompatActivity {
         setContentView(R.layout.at_test);
         tabLayout = findViewById(R.id.tabLayout);
         viewPager = findViewById(R.id.viewPager);
+        toolbar = findViewById(R.id.toolbar);
+        mBottomNavigationBar = findViewById(R.id.bottom_navigation_bar);
         initView();
 
         if (SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             Window window = getWindow();
             window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN//内容延伸到全屏
-                    | View.SYSTEM_UI_FLAG_LAYOUT_STABLE //固定view的位置
                     // | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION //隐藏底部虚拟导航栏,直播的时候可以用
                     | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);//23以上可以标记状态栏为亮色,字体会自动反转为深色
             // 部分机型的statusbar会有半透明的黑色背景(19-21,21以上可以设置颜色)
@@ -60,7 +68,37 @@ public class TestActivity extends AppCompatActivity {
             winParams.flags |= bits;
             win.setAttributes(winParams);
         }
+        initBottomNavigation();
 
+        FrameLayout.LayoutParams lps = (FrameLayout.LayoutParams) toolbar.getLayoutParams();
+        lps.height += DimensionUtils.dpToPx(40, this);
+        lps.topMargin = (int) DimensionUtils.dpToPx(24, this);
+        toolbar.setLayoutParams(lps);
+
+    }
+
+    private void initBottomNavigation() {
+        //1.设置Mode  MODE_FIXED MODE_SHIFTING
+        mBottomNavigationBar.setMode(BottomNavigationBar.MODE_DEFAULT);
+        //2.设置BackgroundStyle  BACKGROUND_STYLE_RIPPLE  BACKGROUND_STYLE_STATIC
+        mBottomNavigationBar.setBackgroundStyle(BottomNavigationBar.BACKGROUND_STYLE_RIPPLE);
+        //3.设置背景色
+        mBottomNavigationBar.setBarBackgroundColor(android.R.color.white);
+        //4.设置每个Item ,并添加角标
+        BadgeItem badgeItem = new BadgeItem()
+                .setBackgroundColorResource(android.R.color.holo_red_dark) //设置角标背景色
+                .setText("99") //设置角标的文字
+                .setTextColorResource(android.R.color.white) //设置角标文字颜色
+                .setHideOnSelect(true); //在选中时是否隐藏角标
+        mBottomNavigationBar.addItem(new BottomNavigationItem(R.mipmap.ic_launcher, "Item 1")
+                .setActiveColorResource(android.R.color.holo_blue_dark)
+                .setBadgeItem(badgeItem));
+        mBottomNavigationBar.addItem(new BottomNavigationItem(R.mipmap.ic_launcher, "Item 2").setActiveColorResource(android.R.color.holo_green_dark));
+        mBottomNavigationBar.addItem(new BottomNavigationItem(R.mipmap.ic_launcher, "Item 3").setActiveColorResource(android.R.color.holo_orange_dark));
+        mBottomNavigationBar.addItem(new BottomNavigationItem(R.mipmap.ic_launcher, "Item 4").setActiveColorResource(android.R.color.holo_green_dark));
+        mBottomNavigationBar.addItem(new BottomNavigationItem(R.mipmap.ic_launcher, "Item 5").setActiveColorResource(android.R.color.holo_orange_dark));
+        //5.初始化
+        mBottomNavigationBar.initialise();
     }
 
     private void initView() {

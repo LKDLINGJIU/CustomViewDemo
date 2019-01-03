@@ -15,7 +15,7 @@
             android:layout_height="wrap_content"
             android:minHeight="100dp"
             android:orientation="vertical"
-            app:layout_scrollFlags="scroll|exitUntilCollapsed">
+            app:layout_scrollFlags="scroll|enterAlwaysCollapsed|enterAlways">
 
             <TextView
                 android:layout_width="match_parent"

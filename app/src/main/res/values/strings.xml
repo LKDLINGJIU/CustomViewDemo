@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">CustomViewDemo</string>
+    <string name="content_desc">书的内容主要是分析拖延症患者是如何把一件事一拖再拖，最后引发最终心里的焦虑和不安，甚至找了各种借口来做一些然并卵的自我安慰，最后再告诉你如何去改善自己的拖延症。目前我看了这书大约六分之一，就被各种心理分析打脸无数次，奈何此书写得太好，所以分享给有需要的童鞋（拖延症患者做好被无情打脸的心理准备）。刚好本人平时也有看书的好习惯，以后看到什么不错的书，也在博文里面分享一下好了。好了，吹水就先到这里，接下来进入文章的正题。
+今天这篇文章主要是向大家介绍 RecyclerView 和 ListView 的使用对比，文章主要包括以下几点的内容：
+RecyclerView 和 ListView 布局效果的对比
+RecyclerView 和 ListView 一些常用的功能 和 API 的对比
+RecyclerView 和 ListView 在 Android L 引入嵌套滚动机制之后的对比
+有一点需要强调下，文中所有的效果在真机上都是很流畅的，因为录制 GIF 图很容易掉帧，所以特地放慢了操作，千万不要误会成卡顿了啊！
+布局效果对比
+作为一枚控件，要引起开发者使用的欲望自然先是从显示效果看起（看脸的世界），ListView 大家对效果已经很熟悉了，这里直接跳过，而作为 RecyclerView，它能带给效果要比 ListView 强大得多，如下图
+</string>
 </resources>
