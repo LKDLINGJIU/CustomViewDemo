@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/contentView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
+    <!--android:fitsSystemWindows="true"-->
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="25dp" />
 
     <ListView
         android:id="@+id/listView"
@@ -11,6 +17,7 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:visibility="visible" />
+
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -37,8 +44,7 @@
     <FrameLayout
         android:id="@+id/emoj_panel_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="40dp"
         android:background="@color/colorPrimary"
-        android:minHeight="200dp"
-        android:visibility="gone" />
+        android:visibility="visible" />
 </LinearLayout>
