@@ -18,7 +18,6 @@ public class BehaviorActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ac_behavior);
-
     }
 
 
@@ -36,5 +35,6 @@ public class BehaviorActivity extends AppCompatActivity {
             varFrameLayout.collapse();
         }
         isExpand = !isExpand;
+
     }
 }

@@ -51,6 +51,7 @@ public class VariableHeightFrameLayout extends FrameLayout implements ValueAnima
                 mHeight = getHeight();
             }
         });
+
     }
 
     public void expand() {
@@ -59,7 +60,9 @@ public class VariableHeightFrameLayout extends FrameLayout implements ValueAnima
         setVisibility(View.VISIBLE);
         mAnimator.setFloatValues(0, mHeight);
         mAnimator.start();
+
     }
+
 
     public void collapse() {
         if (mCurStatus == COLLAPSE || mAnimator.isRunning()) return;

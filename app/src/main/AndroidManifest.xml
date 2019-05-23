@@ -10,16 +10,23 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".MainActivity"></activity>
-        <activity android:name=".material.MaterialActivity"></activity>
+        <activity android:name=".material.MaterialActivity">
+
+        </activity>
         <activity android:name=".material.TestActivity"></activity>
         <activity android:name=".material.BehaviorActivity">
+
+        </activity>
+        <activity android:name=".material.BehaviorPracticeActivity" />
+        <activity
+            android:name=".KeyboardSoftActivity"
+            android:windowSoftInputMode="adjustResize|stateAlwaysHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".material.BehaviorPracticeActivity" />
     </application>
 
 </manifest>
